@@ -1,0 +1,141 @@
+Video: https://www.youtube.com/watch?v=CvCiNeLnZ00  04:10:00
+
+neues Modul: npm install express-rate-limit 
+
+Authentication(Echtheitsprüfung): Überprüfung wer jemand ist (Login mit: username, password).
+Authorization(Berechtigung): Überprüfung zu welchen Resourcen jemand Berechtigungen hat (JSON Web Tokens...).
+
+JWT: Access Token für short time
+     Refresh Token für long time
+
+Erstellen der Token im Terminal
+Eingabe: node
+         require('crypto').randomBytes(64).toString('hex')
+Ausgabe: 'e056739e61432e7b7da3d551a7eef4528c90f2ef48674d9c09d7140f561c31dbe4cb953556db4a76c52890491b6e53ffa77b949ecf6213a51eb0d8bd9e7e97e4'
+diesen Token in .env als ACCESS_TOKEN
+         require('crypto').randomBytes(64).toString('hex')
+Ausgabe: 'e878408fd94e9355fe71cae25767dbef048fa0cad4432945a258556c9e83f3e6df0ce828dc014a91457353623cef8be7741b17a34ab08f0a9e05fd416cdf27b1'
+diesen Token in .env als REFRESH_TOKEN
+
+Postman
+POST: http://localhost:3500/auth
+Headers: Content-Type - application/json
+Body/raw: {
+             "username": "Hans Jürgen",
+             "password": "!Hh12347"
+          }
+
+!!! damit dieser POST funktioniert braucht es einen user der vorher(lesson_07) 
+    mit http://localhost:3000/dash erstellt wurde!!!
+
+nach POST in  Postman 'Cookies' Einstellungen öffnen, unter jwt diesen Eintrag
+jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkhhbnMgSsO8cmdlbiIsImlhdCI6MTc1NDQyNTMzMywiZXhwIjoxNzU0NTExNzMzfQ.nT5L418TxzQVhCBEcvGB7DlSQsy561oX-0G9iVvhjMo;
+Path=/; Secure; HttpOnly; Expires=Tue, 12 Aug 2025 20:22:12 GMT;
+dann Secure; entfernen, save, und GET ausführen
+
+GET: http://localhost:3500/auth/refresh
+jetzt bekommen wir einen neuen Access-Token 
+
+POST: http://localhost:3500/auth/logout
+Ausgabe: {
+          "message": "Cookie cleared"
+         }
+           
+
+
+nach POST: http://localhost:3500/auth den AccessToken kopieren
+{
+    "accessToken": "ebnMgSsO8cm ... yw0A"
+}
+dann in Headers: Authorization - Bearer eyJhbGciO ... 7sKg0dyw0A
+GET: http://localhost:3500/notes
+Ausgabe: { "message": "Forbidden" } , weil der Token abgelaufen ist.
+in authController.js die Zeit verlängern auf 1min
+
+bei Einhaltung der Zeit 
+Ausgabe: [
+    {
+        "_id": "688d2670f94a0e9e551b53be",
+        "user": "6889243146bc511f1ef73b41",
+        "title": "Meeting mit Edgar",
+        "text": "Besprechung am Montag um 10 Uhr",
+        "completed": false,
+        "createdAt": "2025-08-01T20:41:20.413Z",
+        "updatedAt": "2025-08-01T20:41:20.413Z",
+        "ticket": 500,
+        "__v": 0,
+        "username": "Edgar"
+    },
+    {
+        "_id": "688e5411b7a59034c403b4c5",
+        "user": "688e5361b7a59034c403b4c0",
+        "title": "neuer Versuch",
+        "text": "Jobcenter am Donnerstag um 9 Uhr",
+        "completed": false,
+        "createdAt": "2025-08-02T18:08:17.438Z",
+        "updatedAt": "2025-08-02T18:08:17.438Z",
+        "ticket": 503,
+        "__v": 0,
+        "username": "Hans Jürgen"
+    },
+    {
+        "_id": "68910567a402b1130871a06c",
+        "user": "68910526a402b1130871a067",
+        "title": "Weinfest",
+        "text": "die Schulkellerparty findet jetzt statt",
+        "completed": false,
+        "createdAt": "2025-08-04T19:09:27.375Z",
+        "updatedAt": "2025-08-04T19:09:27.375Z",
+        "ticket": 504,
+        "__v": 0,
+        "username": "Koslowsky"
+    }
+]
+der notes , danach wieder { "message": "Forbidden" }
+
+------------------------------------------------------------------------------------------------------------
+
+ß6:45:00 
+cd Dave\MERN_05_ReactJS\lesson_12-backend - Refactoring
+da 'Dave' und 'dave' das gleiche sind wird kein duplicate-Fehler ausgelöst.
+case insensitive - case sensitive
+
+const duplicate = await User.findOne({ username }).collation({ locale:'en',strength: 2 }).lean().exec()
+Erweiterung um collation (Vergleich) in users/notesController
+
+strength	Beschreibung
+1	        Primär: Vergleicht nur Basiszeichen. Ignoriert Groß-/Kleinschreibung und Akzente.
+2	        Sekundär: Vergleicht Basiszeichen und Akzente. Ignoriert Groß-/Kleinschreibung.
+3	        Tertiär: Vergleicht Basiszeichen, Akzente und Groß-/Kleinschreibung.
+4	        Quaternär: Berücksichtigt zusätzlich Sonderzeichen (z. B. Satzzeichen).
+5	        Identisch: Vollständiger Vergleich, inkl. Unicode-Normalisierung. Wird selten verwendet.
+
+speziell für MongoDB
+
+diesen Teil " !Array.isArray(roles) || !roles.length " in  controllers/usersController.js(Zeile 24) herausnehmen
+
+if (!username || !password || !Array.isArray(roles) || !roles.length) 
+    {
+        return res.status(400).json({message: 'All fields are required'})
+    }
+
+und hier einsetzen (Zeile)
+const userObject = (!Array.isArray(roles) || !roles.length)
+        ? { username, "password": hashedPwd}
+        : { username, "password": hashedPwd, roles}
+
+
+
+
+neues Modul 
+npm i express-async-errors
+require('express-async-errors') ersetzt const asyncHandler = require('express-async-handler')
+macht den Code übersichtlicher.
+muss nur in server.js eingesetzt werden, gilt dann in allen Dateien
+geändert: controllers/authController.js
+                     /notesController.js
+                     /usersController.js
+               
+
+07:01:01 
+
