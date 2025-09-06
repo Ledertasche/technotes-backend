@@ -4,8 +4,7 @@ const allowedOrigins = [
     'https://google.com',
     'https://www.weingut-schweikart.de',
     'https://technotes.onrender.com',
-    'https://technotes-5g3s.onrender.com/',
-    'https://technotes-5g3s.onrender.com/login'
+    'https://technotes-5g3s.onrender.com'
 ]
 
 module.exports = allowedOrigins
